@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<businessObjectModel modelVersion="1.0" productVersion="7.7.0">
+    <businessObjects>
+        <businessObject qualifiedName="edu.umassd.model.UMDPendingNotification">
+            <description>Utility object to handle pending task notification history</description>
+            <fields>
+                <field type="LONG" length="255" name="userId" nullable="false" collection="false"/>
+                <field type="LONG" length="255" name="taskId" nullable="false" collection="false"/>
+                <field type="LONG" length="255" name="processId" nullable="false" collection="false"/>
+                <field type="LOCALDATETIME" length="255" name="lastSent" nullable="true" collection="false"/>
+                <field type="LOCALDATETIME" length="255" name="firstSent" nullable="true" collection="false"/>
+            </fields>
+            <uniqueConstraints>
+                <uniqueConstraint name="UNIQUE_CONSTRAINT_3">
+                    <fieldNames>
+                        <fieldName>processId</fieldName>
+                        <fieldName>userId</fieldName>
+                        <fieldName>taskId</fieldName>
+                    </fieldNames>
+                </uniqueConstraint>
+            </uniqueConstraints>
+            <queries/>
+            <indexes/>
+        </businessObject>
+    </businessObjects>
+</businessObjectModel>

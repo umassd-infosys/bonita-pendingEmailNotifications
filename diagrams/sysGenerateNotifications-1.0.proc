@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:connectorconfiguration="http://wwww.bonitasoft.org/model/connector/configuration" xmlns:decision="http://www.bonitasoft.org/ns/studio/process/decision" xmlns:expression="http://www.bonitasoft.org/ns/studio/expression" xmlns:notation="http://www.eclipse.org/gmf/runtime/1.0.2/notation" xmlns:parameter="http://www.bonitasoft.org/ns/studio/parameter" xmlns:process="http://www.bonitasoft.org/ns/studio/process" xsi:schemaLocation="http://www.bonitasoft.org/ns/studio/process/decision http://www.bonitasoft.org/ns/studio/process#//decision">
+  <process:MainProcess xmi:id="_d6hdQEdMEemz7LrxprMgyg" documentation="Generate notifications for Pending HumanActivity instances&#xA;" name="sysGenerateNotifications" author="mrobinson" bonitaVersion="7.8.3" bonitaModelVersion="7.8.3-001" configId="ACED000574002873797347656E65726174654E6F74696669636174696F6E73372E382E332D303031372E382E337370">
+    <elements xmi:type="process:Pool" xmi:id="_tdfaoGBgEeml3PH0vGU6jQ" documentation="This process checks for Assigned &amp; Pending Tasks and notifies their assigned or possible actors via email" name="sys Pending Tasks Emails" displayName="Check for Assigned And Pending Human Tasks">
+      <elements xmi:type="process:StartEvent" xmi:id="_wqErYGBgEeml3PH0vGU6jQ" name="Manual Start" outgoing="_3szuUGBgEeml3PH0vGU6jQ">
+        <dynamicLabel xmi:type="expression:Expression" xmi:id="_wqFScWBgEeml3PH0vGU6jQ" name="" content="" returnTypeFixed="true"/>
+        <dynamicDescription xmi:type="expression:Expression" xmi:id="_wqFScGBgEeml3PH0vGU6jQ" name="" content="" returnTypeFixed="true"/>
+        <stepSummary xmi:type="expression:Expression" xmi:id="_wqFScmBgEeml3PH0vGU6jQ" name="" content="" returnTypeFixed="true"/>
+      </elements>
+      <elements xmi:type="process:StartTimerEvent" xmi:id="_xltNMGBgEeml3PH0vGU6jQ" name="Timed Start" outgoing="_IDVJoGCJEeml3PH0vGU6jQ">
+        <dynamicLabel xmi:type="expression:Expression" xmi:id="_xlt0QWBgEeml3PH0vGU6jQ" name="" content="" returnTypeFixed="true"/>
+        <dynamicDescription xmi:type="expression:Expression" xmi:id="_xlt0QGBgEeml3PH0vGU6jQ" name="" content="" returnTypeFixed="true"/>
+        <stepSummary xmi:type="expression:Expression" xmi:id="_xlt0QmBgEeml3PH0vGU6jQ" name="" content="" returnTypeFixed="true"/>
+        <condition xmi:type="expression:Expression" xmi:id="_yqcnsGBgEeml3PH0vGU6jQ" name="0 30 7 1/1 * ? *" content="0 30 7 1/1 * ? *"/>
+      </elements>
+      <elements xmi:type="process:ServiceTask" xmi:id="_3Sz58GBgEeml3PH0vGU6jQ" name="Generate Tasks By User" outgoing="_p2T5wGB6Eeml3PH0vGU6jQ" incoming="_3szuUGBgEeml3PH0vGU6jQ _IDVJoGCJEeml3PH0vGU6jQ">
+        <dynamicLabel xmi:type="expression:Expression" xmi:id="_3Sz58mBgEeml3PH0vGU6jQ" name="" content="" returnTypeFixed="true"/>
+        <dynamicDescription xmi:type="expression:Expression" xmi:id="_3Sz58WBgEeml3PH0vGU6jQ" name="" content="" returnTypeFixed="true"/>
+        <stepSummary xmi:type="expression:Expression" xmi:id="_3Sz582BgEeml3PH0vGU6jQ" name="" content="" returnTypeFixed="true"/>
+        <operations xmi:type="expression:Operation" xmi:id="_6rVU8GBgEeml3PH0vGU6jQ">
+          <leftOperand xmi:type="expression:Expression" xmi:id="_6rVU8WBgEeml3PH0vGU6jQ" name="notificationList" content="notificationList" type="TYPE_VARIABLE" returnType="java.util.List">
+            <referencedElements xmi:type="process:BusinessObjectData" xmi:id="_zuMBAGB-Eeml3PH0vGU6jQ" name="notificationList" multiple="true" dataType="_d6hddEdMEemz7LrxprMgyg" className="edu.umassd.model.UMDPendingNotification"/>
+          </leftOperand>
+          <rightOperand xmi:type="expression:Expression" xmi:id="_6rVU8mBgEeml3PH0vGU6jQ" name="getTasks" content="/* Generate an arrayList of ALL notifications */&#xA;&#xA;import java.time.LocalDateTime&#xA;import java.time.ZoneOffset&#xA;&#xA;import org.bonitasoft.engine.api.ProcessAPI;&#xA;import org.bonitasoft.engine.bpm.flownode.HumanTaskInstance;&#xA;import org.bonitasoft.engine.bpm.flownode.HumanTaskInstanceSearchDescriptor&#xA;import org.bonitasoft.engine.bpm.parameter.ParameterCriterion&#xA;import org.bonitasoft.engine.bpm.parameter.ParameterInstance&#xA;import org.bonitasoft.engine.bpm.process.ProcessDeploymentInfo&#xA;import org.bonitasoft.engine.bpm.process.ProcessDeploymentInfoSearchDescriptor&#xA;import org.bonitasoft.engine.identity.User&#xA;import org.bonitasoft.engine.search.Order;&#xA;import org.bonitasoft.engine.search.SearchOptions;&#xA;import org.bonitasoft.engine.search.SearchOptionsBuilder;&#xA;import org.bonitasoft.engine.search.SearchResult;&#xA;&#xA;import java.util.logging.Logger;&#xA;&#xA;import edu.umassd.model.UMDPendingNotification;&#xA;&#xA;ProcessAPI processAPI = apiAccessor.getProcessAPI();&#xA;LocalDateTime lastSent = now.minusDays(numDaysReminder);&#xA;Logger logger=Logger.getLogger(&quot;org.bonitasoft&quot;);&#xA;&#xA;/* Initialize the search builder for the humanTasks */&#xA;final SearchOptionsBuilder humanTaskSearchOptionsBuilder = new SearchOptionsBuilder(0, 5000);&#xA;/* Get all the possible processes that are deployed to look for ones where notifications are turned off */&#xA;SearchOptions processSearchOptions = new SearchOptionsBuilder(0, 100).sort(ProcessDeploymentInfoSearchDescriptor.DEPLOYMENT_DATE, Order.DESC).done();&#xA;SearchResult&lt;ProcessDeploymentInfo> deploymentInfoResults = processAPI.searchProcessDeploymentInfos(processSearchOptions);&#xA;List&lt;ProcessDeploymentInfo> processDeployments = deploymentInfoResults.getResult();&#xA;for(ProcessDeploymentInfo process : processDeployments) {&#xA;&#x9;try {&#xA;&#x9;&#x9;if(debug) {&#xA;&#x9;&#x9;&#x9;logger.severe(process.getDisplayName());&#xA;&#x9;&#x9;}&#xA;&#x9;&#x9;ParameterInstance parameter = processAPI.getParameterInstance(process.processId, processParameterToSkip);&#xA;&#x9;&#x9;if(parameter) {&#xA;&#x9;&#x9;&#x9;logger.severe(&quot;SKIP THIS PROCESS!&quot;);&#xA;&#x9;&#x9;&#x9;if(parameter.getType()==&quot;Java.lang.Boolean&quot; &amp;&amp; parameter.getValue() == true) {&#xA;&#x9;&#x9;&#x9;&#x9;humanTaskSearchOptionsBuilder.differentFrom(HumanTaskInstanceSearchDescriptor.PROCESS_DEFINITION_ID, process.processId);&#xA;&#x9;&#x9;&#x9;} else if(parameter.getType()==&quot;Java.lang.String&quot; &amp;&amp; Boolean.parseBoolean(parameter.getValue()) == true) {&#xA;&#x9;&#x9;&#x9;&#x9;humanTaskSearchOptionsBuilder.differentFrom(HumanTaskInstanceSearchDescriptor.PROCESS_DEFINITION_ID, process.processId);&#xA;&#x9;&#x9;&#x9;} else if(parameter.getType()==&quot;Java.lang.Integer&quot; &amp;&amp; parameter.getValue()== 1) {&#xA;&#x9;&#x9;&#x9;&#x9;humanTaskSearchOptionsBuilder.differentFrom(HumanTaskInstanceSearchDescriptor.PROCESS_DEFINITION_ID, process.processId);&#xA;&#x9;&#x9;&#x9;}&#xA;&#x9;&#x9;}&#xA;&#x9;} catch(Exception ex) {&#xA;&#x9;&#x9;if(debug) {&#xA;&#x9;&#x9;&#x9;logger.severe(&quot;Exception when trying to determine processes to skip for notifications&quot;);&#xA;&#x9;&#x9;&#x9;logger.severe(ex.getMessage());&#xA;&#x9;&#x9;}&#xA;&#x9;}&#xA;}&#xA;humanTaskSearchOptionsBuilder.sort(HumanTaskInstanceSearchDescriptor.DUE_DATE, Order.DESC);&#xA;SearchResult&lt;HumanTaskInstance> allTasksResults = processAPI.searchAssignedAndPendingHumanTasks(humanTaskSearchOptionsBuilder.done());&#xA;List&lt;HumanTaskInstance> allTasks = allTasksResults.getResult();&#xA;List&lt;User> possible;&#xA;List&lt;Long> possibleUsers;&#xA;&#xA;&#xA;&#xA;for(HumanTaskInstance task : allTasks) {&#xA;&#x9;possibleUsers = new ArrayList&lt;Long>();&#xA;&#x9;logger.severe(task.toString());&#xA;&#x9;if(task.assigneeId==0) {&#xA;&#x9;&#x9;/* if 0 then it's &quot;pending&quot;, so let's determine the first &quot;maxPossibleUsers&quot; (parameter) to lookup for notification */&#xA;&#x9;&#x9;possible = processAPI.getPossibleUsersOfPendingHumanTask(task.getId(), 0, maxPossibleUsers);&#xA;&#x9;&#x9;for(User u : possible) {&#xA;&#x9;&#x9;&#x9;possibleUsers.add(u.getId());&#xA;&#x9;&#x9;}&#xA;&#x9;} else {&#xA;&#x9;&#x9;possibleUsers.add(task.assigneeId);&#xA;&#x9;}&#xA;&#x9;for(long userId : possibleUsers) {&#xA;&#x9;&#x9;UMDPendingNotification tempnotification = uMDPendingNotificationDAO.findByProcessIdAndUserIdAndTaskId(task.getProcessDefinitionId(), userId, task.getId());&#xA;&#x9;&#x9;if(tempnotification &amp;&amp; tempnotification.userId>0 &amp;&amp; tempnotification.getLastSent().toInstant(ZoneOffset.UTC).isBefore(lastSent.toInstant(ZoneOffset.UTC))) {&#xA;&#x9;&#x9;&#x9;tempnotification.setLastSent(now);&#xA;&#x9;&#x9;&#x9;logger.severe(&quot;Send notification -- update last sent to now&quot;);&#xA;&#x9;&#x9;} else if(tempnotification) {&#xA;&#x9;&#x9;&#x9;//DO NOTHING&#xA;&#x9;&#x9;&#x9;logger.severe(&quot;Recent notification found -- leave alone&quot;);&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;} else {&#xA;&#x9;&#x9;&#x9;tempnotification = uMDPendingNotificationDAO.newInstance(userId, task.getId(), task.getProcessDefinitionId());&#xA;&#x9;&#x9;&#x9;logger.severe(&quot;Create new Notification instance&quot;);&#xA;&#x9;&#x9;&#x9;tempnotification.setFirstSent(now);&#xA;&#x9;&#x9;&#x9;tempnotification.setLastSent(now);&#xA;&#x9;&#x9;}&#xA;&#x9;&#x9;notificationList.add(tempnotification);&#xA;&#x9;}&#xA;}&#xA;return notificationList;&#xA;&#xA;" interpreter="GROOVY" type="TYPE_READ_ONLY_SCRIPT" returnType="java.util.List">
+            <referencedElements xmi:type="expression:Expression" xmi:id="_528gAGEjEeml3PH0vGU6jQ" name="uMDPendingNotificationDAO" content="uMDPendingNotificationDAO" type="TYPE_BUSINESS_OBJECT_DAO" returnType="edu.umassd.model.UMDPendingNotificationDAO" returnTypeFixed="true"/>
+            <referencedElements xmi:type="parameter:Parameter" xmi:id="_528gAWEjEeml3PH0vGU6jQ" name="maxPossibleUsers" typeClassname="java.lang.Integer" description="maximum number of users to fetch in possibleuser calculation — set to a low number for performance reasons (pref. under 50)"/>
+            <referencedElements xmi:type="parameter:Parameter" xmi:id="_528gAmEjEeml3PH0vGU6jQ" name="debug" typeClassname="java.lang.Boolean" description="when TRUE then the process sends email to debugEmail"/>
+            <referencedElements xmi:type="parameter:Parameter" xmi:id="_528gA2EjEeml3PH0vGU6jQ" name="processParameterToSkip" typeClassname="java.lang.String" description="Determine if a process should be skipped if it has a parameter with the defined name that is set to “true” (can be a boolean, string, or integer representation of true/false) "/>
+            <referencedElements xmi:type="process:BusinessObjectData" xmi:id="_8jcX8WEiEeml3PH0vGU6jQ" name="notificationList" multiple="true" dataType="_d6hddEdMEemz7LrxprMgyg" className="edu.umassd.model.UMDPendingNotification"/>
+            <referencedElements xmi:type="expression:Expression" xmi:id="_8jcX8mEiEeml3PH0vGU6jQ" name="apiAccessor" content="apiAccessor" type="TYPE_ENGINE_CONSTANT" returnType="com.bonitasoft.engine.api.APIAccessor"/>
+            <referencedElements xmi:type="parameter:Parameter" xmi:id="_8jcX82EiEeml3PH0vGU6jQ" name="numDaysReminder" typeClassname="java.lang.Integer"/>
+            <referencedElements xmi:type="process:JavaObjectData" xmi:id="_8jc_AGEiEeml3PH0vGU6jQ" name="now" dataType="_d6hdckdMEemz7LrxprMgyg" className="java.time.LocalDateTime"/>
+          </rightOperand>
+          <operator xmi:type="expression:Operator" xmi:id="_6rVU82BgEeml3PH0vGU6jQ" type="ASSIGNMENT"/>
+        </operations>
+        <operations xmi:type="expression:Operation" xmi:id="_z3hjMGB-Eeml3PH0vGU6jQ">
+          <leftOperand xmi:type="expression:Expression" xmi:id="_z3hjMWB-Eeml3PH0vGU6jQ" name="determineUserTasks" content="determineUserTasks" type="TYPE_VARIABLE" returnType="java.util.List">
+            <referencedElements xmi:type="process:JavaObjectData" xmi:id="_0TrTsGB-Eeml3PH0vGU6jQ" documentation="Get a list of type:&#xA;&lt;List&lt;List&lt;Tasks>>" name="determineUserTasks" multiple="true" dataType="_d6hdckdMEemz7LrxprMgyg" className="java.util.List"/>
+          </leftOperand>
+          <rightOperand xmi:type="expression:Expression" xmi:id="_z3hjMmB-Eeml3PH0vGU6jQ" name="generateTasks" content="import java.util.function.Function&#xA;import java.util.stream.Collectors&#xA;import java.util.logging.Logger;&#xA;import edu.umassd.model.UMDPendingNotification;&#xA;Logger logger=Logger.getLogger(&quot;org.bonitasoft&quot;);&#xA;import org.bonitasoft.engine.bpm.flownode.HumanTaskInstance&#xA;import edu.umassd.model.UMDPendingNotification;&#xA;&#xA;//Convert the notificationList to a Map to group by UserId&#xA;Map&lt;Long,ArrayList&lt;HumanTaskInstance>> t = notificationList.stream().collect(Collectors.groupingBy( (Function) { UMDPendingNotification ti -> return ti.userId }));&#xA;logger.severe(t.toString());&#xA;//Convert the Map to a 2 dimensional list so we can send emails&#xA;//Iterate through the values to make sure that we have something that warrants the whole message being sent&#xA;List&lt;ArrayList&lt;HumanTaskInstance>> values = new ArrayList&lt;ArrayList&lt;HumanTaskInstance>>();&#xA;t.each{k, v->&#xA;&#x9;if(v.size()>0) {&#xA;&#x9;&#x9;boolean okToSend = false;&#xA;&#x9;&#x9;for(UMDPendingNotification notify : v) {&#xA;&#x9;&#x9;&#x9;if(notify.lastSent == now) {&#xA;&#x9;&#x9;&#x9;&#x9;okToSend=true;&#xA;&#x9;&#x9;&#x9;&#x9;break;&#xA;&#x9;&#x9;&#x9;}&#xA;&#x9;&#x9;}&#xA;&#x9;&#x9;if(okToSend==true) {&#xA;&#x9;&#x9;&#x9;values.add(v);&#xA;&#x9;&#x9;}&#xA;&#x9;}&#xA;}&#xA;logger.severe(values.toString());&#xA;return values;&#xA;" interpreter="GROOVY" type="TYPE_READ_ONLY_SCRIPT" returnType="java.util.List">
+            <referencedElements xmi:type="process:BusinessObjectData" xmi:id="_lwrIkGETEeml3PH0vGU6jQ" name="notificationList" multiple="true" dataType="_d6hddEdMEemz7LrxprMgyg" className="edu.umassd.model.UMDPendingNotification"/>
+            <referencedElements xmi:type="process:JavaObjectData" xmi:id="_lwrIkWETEeml3PH0vGU6jQ" name="now" dataType="_d6hdckdMEemz7LrxprMgyg" className="java.time.LocalDateTime"/>
+          </rightOperand>
+          <operator xmi:type="expression:Operator" xmi:id="_z3hjM2B-Eeml3PH0vGU6jQ" type="ASSIGNMENT"/>
+        </operations>
+        <loopCondition xmi:type="expression:Expression" xmi:id="_3Sz59GBgEeml3PH0vGU6jQ" name="" content="" returnType="java.lang.Boolean" returnTypeFixed="true"/>
+        <loopMaximum xmi:type="expression:Expression" xmi:id="_3Sz59WBgEeml3PH0vGU6jQ" name="" content="" returnType="java.lang.Integer" returnTypeFixed="true"/>
+        <cardinalityExpression xmi:type="expression:Expression" xmi:id="_3Sz59mBgEeml3PH0vGU6jQ" name="" content="" returnType="java.lang.Integer" returnTypeFixed="true"/>
+        <iteratorExpression xmi:type="expression:Expression" xmi:id="_3Sz5-GBgEeml3PH0vGU6jQ" name="multiInstanceIterator" content="multiInstanceIterator" type="MULTIINSTANCE_ITERATOR_TYPE" returnType="java.lang.Object" returnTypeFixed="true"/>
+        <completionCondition xmi:type="expression:Expression" xmi:id="_3Sz592BgEeml3PH0vGU6jQ" name="" content="" returnType="java.lang.Boolean" returnTypeFixed="true"/>
+      </elements>
+      <elements xmi:type="process:ServiceTask" xmi:id="_pCNjUGB6Eeml3PH0vGU6jQ" name="Send Emails" outgoing="_87dTwGB8Eeml3PH0vGU6jQ" incoming="_p2T5wGB6Eeml3PH0vGU6jQ" type="SEQUENTIAL" collectionDataToMultiInstantiate="_EPCf0GBhEeml3PH0vGU6jQ">
+        <dynamicLabel xmi:type="expression:Expression" xmi:id="_pCNjUWB6Eeml3PH0vGU6jQ" name="" content="" returnTypeFixed="true"/>
+        <dynamicDescription xmi:type="expression:Expression" xmi:id="_pCNjUmB6Eeml3PH0vGU6jQ" name="" content="" returnTypeFixed="true"/>
+        <stepSummary xmi:type="expression:Expression" xmi:id="_pCNjU2B6Eeml3PH0vGU6jQ" name="descriptionAfterCompletion()" content="return &quot;Send emails for &quot;+user.userName;" interpreter="GROOVY" type="TYPE_READ_ONLY_SCRIPT" returnTypeFixed="true">
+          <referencedElements xmi:type="process:JavaObjectData" xmi:id="_Q_kPYGCKEeml3PH0vGU6jQ" name="user" dataType="_d6hdckdMEemz7LrxprMgyg" className="org.bonitasoft.engine.identity.User"/>
+        </stepSummary>
+        <connectors xmi:type="process:Connector" xmi:id="_pCNjVmB6Eeml3PH0vGU6jQ" name="Send Email" definitionId="email" event="ON_FINISH" ignoreErrors="true" definitionVersion="1.0.0">
+          <configuration xmi:type="connectorconfiguration:ConnectorConfiguration" xmi:id="_pCNjV2B6Eeml3PH0vGU6jQ" definitionId="email" version="1.0.0" modelVersion="7.8.0-002">
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjWGB6Eeml3PH0vGU6jQ" key="smtpHost">
+              <expression xmi:type="expression:Expression" xmi:id="_pCNjWWB6Eeml3PH0vGU6jQ" name="mailHost" content="mailHost" type="TYPE_PARAMETER" returnTypeFixed="true">
+                <referencedElements xmi:type="parameter:Parameter" xmi:id="_x5Of8GB9Eeml3PH0vGU6jQ" name="mailHost" typeClassname="java.lang.String"/>
+              </expression>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjW2B6Eeml3PH0vGU6jQ" key="smtpPort">
+              <expression xmi:type="expression:Expression" xmi:id="_pCNjXGB6Eeml3PH0vGU6jQ" name="mailPort" content="mailPort" type="TYPE_PARAMETER" returnType="java.lang.Integer" returnTypeFixed="true">
+                <referencedElements xmi:type="parameter:Parameter" xmi:id="_x5Of8WB9Eeml3PH0vGU6jQ" name="mailPort" typeClassname="java.lang.Integer"/>
+              </expression>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjXmB6Eeml3PH0vGU6jQ" key="sslSupport">
+              <expression xmi:type="expression:Expression" xmi:id="_pCNjX2B6Eeml3PH0vGU6jQ" name="false" content="false" returnType="java.lang.Boolean" returnTypeFixed="true"/>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjYGB6Eeml3PH0vGU6jQ" key="starttlsSupport">
+              <expression xmi:type="expression:Expression" xmi:id="_pCNjYWB6Eeml3PH0vGU6jQ" name="true" content="true" returnType="java.lang.Boolean" returnTypeFixed="true"/>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjYmB6Eeml3PH0vGU6jQ" key="userName">
+              <expression xmi:type="expression:Expression" xmi:id="_pCNjY2B6Eeml3PH0vGU6jQ" name="mailUser" content="mailUser" type="TYPE_PARAMETER" returnTypeFixed="true">
+                <referencedElements xmi:type="parameter:Parameter" xmi:id="_x5Of8mB9Eeml3PH0vGU6jQ" name="mailUser" typeClassname="java.lang.String"/>
+              </expression>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjZWB6Eeml3PH0vGU6jQ" key="password">
+              <expression xmi:type="expression:Expression" xmi:id="_pCNjZmB6Eeml3PH0vGU6jQ" name="mailPassword" content="mailPassword" type="TYPE_PARAMETER" returnTypeFixed="true">
+                <referencedElements xmi:type="parameter:Parameter" xmi:id="_x5Of82B9Eeml3PH0vGU6jQ" name="mailPassword" typeClassname="java.lang.String"/>
+              </expression>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjaGB6Eeml3PH0vGU6jQ" key="from">
+              <expression xmi:type="expression:Expression" xmi:id="_pCNjaWB6Eeml3PH0vGU6jQ" name="bpm@umassd.edu" content="bpm@umassd.edu" returnTypeFixed="true"/>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjamB6Eeml3PH0vGU6jQ" key="to">
+              <expression xmi:type="expression:Expression" xmi:id="_pCNja2B6Eeml3PH0vGU6jQ" name="to()" content="/* Determine the user's email address to direct the message to&#xA;when in DEBUG mode, then send to the debugEmail instead! */&#xA;import org.bonitasoft.engine.api.IdentityAPI&#xA;import org.bonitasoft.engine.identity.UserWithContactData&#xA;&#xA;String myEmail = user.getUserName()+defaultDomain;&#xA;try {&#xA;&#x9;IdentityAPI identity = apiAccessor.getIdentityAPI();&#xA;&#x9;UserWithContactData proUser = identity.getUserWithProfessionalDetails(user.getId());&#xA;&#x9;myEmail = proUser.getContactData().getEmail();&#xA;&#x9;} catch(Exception ex) {&#xA;&#x9;&#xA;}&#xA;if(debug==true &amp;&amp; debugEmail.length()>1) {&#xA;&#x9;//send to the debugEmail &#xA;&#x9;myEmail = debugEmail;&#xA;}&#xA;return myEmail;" interpreter="GROOVY" type="TYPE_READ_ONLY_SCRIPT" returnTypeFixed="true">
+                <referencedElements xmi:type="parameter:Parameter" xmi:id="_A0RHMGETEeml3PH0vGU6jQ" name="debug" typeClassname="java.lang.Boolean" description="when TRUE then the process sends email to debugEmail"/>
+                <referencedElements xmi:type="expression:Expression" xmi:id="_A0RHMWETEeml3PH0vGU6jQ" name="apiAccessor" content="apiAccessor" type="TYPE_ENGINE_CONSTANT" returnType="com.bonitasoft.engine.api.APIAccessor"/>
+                <referencedElements xmi:type="parameter:Parameter" xmi:id="_A0RHMmETEeml3PH0vGU6jQ" name="debugEmail" typeClassname="java.lang.String" description="recipient of email when in debug mode"/>
+                <referencedElements xmi:type="parameter:Parameter" xmi:id="_A0RHM2ETEeml3PH0vGU6jQ" name="defaultDomain" typeClassname="java.lang.String"/>
+                <referencedElements xmi:type="process:JavaObjectData" xmi:id="_A0RHNGETEeml3PH0vGU6jQ" name="user" dataType="_d6hdckdMEemz7LrxprMgyg" className="org.bonitasoft.engine.identity.User"/>
+              </expression>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjbmB6Eeml3PH0vGU6jQ" key="bcc">
+              <expression xmi:type="expression:Expression" xmi:id="_pCNjb2B6Eeml3PH0vGU6jQ" content="" returnTypeFixed="true"/>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjcGB6Eeml3PH0vGU6jQ" key="cc">
+              <expression xmi:type="expression:Expression" xmi:id="_pCNjcWB6Eeml3PH0vGU6jQ" content="" returnTypeFixed="true"/>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjcmB6Eeml3PH0vGU6jQ" key="subject">
+              <expression xmi:type="expression:Expression" xmi:id="_pCNjc2B6Eeml3PH0vGU6jQ" name="Pending Task Notification" content="Pending Task Notification" returnTypeFixed="true"/>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjdGB6Eeml3PH0vGU6jQ" key="html">
+              <expression xmi:type="expression:Expression" xmi:id="_pCNjdWB6Eeml3PH0vGU6jQ" name="true" content="true" returnType="java.lang.Boolean" returnTypeFixed="true"/>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjdmB6Eeml3PH0vGU6jQ" key="message">
+              <expression xmi:type="expression:Expression" xmi:id="_pCNjd2B6Eeml3PH0vGU6jQ" name="htmlTasks" content="htmlTasks" interpreter="GROOVY" type="TYPE_VARIABLE" returnTypeFixed="true">
+                <referencedElements xmi:type="process:Data" xmi:id="_pCNjeGB6Eeml3PH0vGU6jQ" documentation="Generate string of tasks to be completed" name="htmlTasks" dataType="_d6hdcUdMEemz7LrxprMgyg"/>
+              </expression>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjeWB6Eeml3PH0vGU6jQ" key="headers">
+              <expression xmi:type="expression:TableExpression" xmi:id="_pCNjemB6Eeml3PH0vGU6jQ"/>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNje2B6Eeml3PH0vGU6jQ" key="charset">
+              <expression xmi:type="expression:Expression" xmi:id="_pCNjfGB6Eeml3PH0vGU6jQ" name="UTF-8" content="UTF-8" returnTypeFixed="true"/>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjfWB6Eeml3PH0vGU6jQ" key="replyTo">
+              <expression xmi:type="expression:Expression" xmi:id="_pCNjfmB6Eeml3PH0vGU6jQ" content="" returnTypeFixed="true"/>
+            </parameters>
+            <parameters xmi:type="connectorconfiguration:ConnectorParameter" xmi:id="_pCNjf2B6Eeml3PH0vGU6jQ" key="attachments">
+              <expression xmi:type="expression:ListExpression" xmi:id="_pCNjgGB6Eeml3PH0vGU6jQ"/>
+            </parameters>
+          </configuration>
+        </connectors>
+        <operations xmi:type="expression:Operation" xmi:id="_pCNjgWB6Eeml3PH0vGU6jQ">
+          <leftOperand xmi:type="expression:Expression" xmi:id="_pCNjgmB6Eeml3PH0vGU6jQ" name="user" content="user" type="TYPE_VARIABLE" returnType="org.bonitasoft.engine.identity.User">
+            <referencedElements xmi:type="process:JavaObjectData" xmi:id="_by6JEGB9Eeml3PH0vGU6jQ" name="user" dataType="_d6hdckdMEemz7LrxprMgyg" className="org.bonitasoft.engine.identity.User"/>
+          </leftOperand>
+          <rightOperand xmi:type="expression:Expression" xmi:id="_pCNjhGB6Eeml3PH0vGU6jQ" name="getUserFromHashMap" content="import java.util.logging.Logger;&#xA;&#xA;import org.bonitasoft.engine.identity.User;&#xA;&#xA;import edu.umassd.model.UMDPendingNotification&#xA;Logger logger=Logger.getLogger(&quot;org.bonitasoft&quot;);&#xA;User u;&#xA;try {&#xA;&#x9;UMDPendingNotification n = message.first();&#xA;&#x9;logger.severe(&quot;getting user from packet: &quot;+n.userId.toString());&#xA;&#x9;u= apiAccessor.getIdentityAPI().getUser(n.userId);&#xA;} catch(Exception ex) {&#xA;&#x9;logger.severe(&quot;Could not get user from list&quot;);&#xA;&#x9;logger.severe(ex.getMessage());&#xA;&#x9;logger.severe(ex.getStackTrace());&#xA;&#x9;logger.severe(message.toString());&#xA;&#x9;u= apiAccessor.getIdentityAPI().getUser(1);&#xA;}&#xA;return u;" interpreter="GROOVY" type="TYPE_READ_ONLY_SCRIPT" returnType="org.bonitasoft.engine.identity.User">
+            <referencedElements xmi:type="expression:Expression" xmi:id="_pCNjhWB6Eeml3PH0vGU6jQ" name="apiAccessor" content="apiAccessor" type="TYPE_ENGINE_CONSTANT" returnType="com.bonitasoft.engine.api.APIAccessor"/>
+            <referencedElements xmi:type="process:JavaObjectData" xmi:id="_pCNjhmB6Eeml3PH0vGU6jQ" name="message" dataType="_d6hdckdMEemz7LrxprMgyg" className="java.util.List"/>
+          </rightOperand>
+          <operator xmi:type="expression:Operator" xmi:id="_pCNjh2B6Eeml3PH0vGU6jQ" type="ASSIGNMENT"/>
+        </operations>
+        <operations xmi:type="expression:Operation" xmi:id="_pCNjjmB6Eeml3PH0vGU6jQ">
+          <leftOperand xmi:type="expression:Expression" xmi:id="_pCNjj2B6Eeml3PH0vGU6jQ" name="htmlTasks" content="htmlTasks" type="TYPE_VARIABLE">
+            <referencedElements xmi:type="process:Data" xmi:id="_cUIm0GB9Eeml3PH0vGU6jQ" documentation="Generate string of tasks to be completed" name="htmlTasks" dataType="_d6hdcUdMEemz7LrxprMgyg"/>
+          </leftOperand>
+          <rightOperand xmi:type="expression:Expression" xmi:id="_pCNjkWB6Eeml3PH0vGU6jQ" name="generateTaskHtml" content="import java.time.format.DateTimeFormatter;&#xA;import java.util.logging.Logger&#xA;&#xA;import org.bonitasoft.engine.api.ProcessAPI;&#xA;import org.bonitasoft.engine.bpm.flownode.HumanTaskInstance;&#xA;import org.bonitasoft.engine.bpm.process.ProcessDefinition;&#xA;import org.bonitasoft.engine.bpm.process.ProcessInstance;&#xA;&#xA;import edu.umassd.model.UMDPendingNotification;&#xA;&#xA;Logger logger=Logger.getLogger(&quot;org.bonitasoft&quot;);&#xA;String dateFormat = &quot;MM/dd/yyyy&quot;;&#xA;&#xA;ProcessAPI processAPI = apiAccessor.getProcessAPI();&#xA;ProcessDefinition process;&#xA;boolean hasSearchKey1=false, hasSearchKey2=false;&#xA;String rowBuffer =&quot;&quot;;&#xA;String s = &quot;&quot;&quot;&#xA;&lt;!doctype html>&#xA;&lt;html lang='en'>&#xA;&lt;head>&#xA;&lt;meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'>&#xA;&lt;/head>&#xA;&lt;body>&lt;div class='container' role='main'>&#xA;&quot;&quot;&quot;&#xA;try {&#xA;int nTasks = message.size();&#xA;String taskString;&#xA;if(nTasks==1) {&#xA;&#x9;taskString= &quot;task&quot;;&#xA;&#x9;}&#xA;else {&#xA;&#x9;taskString= nTasks.toString()+&quot; tasks&quot;;&#xA;}&#xA;if(debug==true) {&#xA;&#x9;s+=&quot;----DEBUG EMAIL MESSAGE---- &lt;br/>\n&quot;;&#xA;}&#xA;&#xA;int rowNum=0;&#xA;long piId; //process instance Id&#xA;ProcessInstance pi; //process&#xA;HumanTaskInstance task;&#xA;String created, searchKey1, searchKey2;&#xA;for(UMDPendingNotification pending : message) {&#xA;&#x9;task = processAPI.getActivityInstance(pending.taskId);&#xA;&#x9;if(task == null) {&#xA;&#x9;&#x9;continue; //task doesn't exist anymore...&#xA;&#x9;}&#xA;&#x9;process = processAPI.getProcessDefinition(task.getProcessDefinitionId());&#xA;&#x9;if(process==null) {&#xA;&#x9;&#x9;continue; //process doesn't exist anymore... &#xA;&#x9;}&#xA;&#x9;piId = processAPI.getProcessInstanceIdFromActivityInstanceId(task.getId());&#xA;&#x9;if(piId==null) {&#xA;&#x9;&#x9;continue; //process instance doesn't exist anymore...&#xA;&#x9;}&#xA;&#x9;pi = processAPI.getProcessInstance(piId);&#xA;&#x9;if(pi==null) {&#xA;&#x9;&#x9;continue; //process instance doesn't exist anymore&#xA;&#x9;}&#xA;&#x9;created = task.reachedStateDate.format(dateFormat);&#xA;&#x9;searchKey1 = pi.getStringIndex1();&#xA;&#x9;if(searchKey1==null) {&#xA;&#x9;&#x9;searchKey1=&quot;&quot;;&#xA;&#x9;} else {&#xA;&#x9;&#x9;hasSearchKey1=true;&#xA;&#x9;}&#xA;&#x9;if(searchKey2==null) {&#xA;&#x9;&#x9;searchKey2=&quot;&quot;;&#xA;&#x9;} else {&#xA;&#x9;&#x9;hasSearchKey2=true;&#xA;&#x9;}&#xA;&#x9;String rowCss=&quot;background-color: #FFF&quot;;&#xA;&#x9;if(++rowNum%2==0) {&#xA;&#x9;&#x9;rowCss=&quot;background-color: #F6F6F6;&quot;;&#xA;&#x9;}&#xA;&#x9;rowBuffer+= &quot;&quot;&quot;&#xA;&lt;tr>&lt;td style='${rowCss}'> ${process.getName()} [${piId}]&lt;/td>&#xA;&lt;td style='${rowCss}'>${task.getDisplayName()}&lt;/td>&#xA;&lt;td style='${rowCss}'>${searchKey1}&lt;/td>&#xA;&lt;td style='${rowCss}'>${created}&lt;/td>&#xA;&quot;&quot;&quot;&#x9;&#xA;}&#xA;&#xA;s+= &quot;&quot;&quot;&#xA;&#x9;Dear ${user.firstName} ${user.lastName},&#xA;&lt;br/>&#xA;&lt;p>You have the following ${taskString}&#xA;pending completion in the Business Process Management platform.&#xA;&lt;/p>&#xA;&lt;table class='table table-striped' width='100%' cellpadding='1' cellspacing='1' bgcolor='#F6F6F6'>&#xA;&lt;thead>&#xA;&lt;tr>&#xA;&lt;th style='text-align:left; background-color: #003764; color: #FEC24D;'>Process&lt;/th>&#xA;&lt;th style='text-align:left; background-color: #003764; color: #FEC24D;'>Task&lt;/th>&#xA;&lt;th style='text-align:left; background-color: #003764; color: #FEC24D;'>Subject&lt;/th>&#xA;&lt;th style='text-align:left; background-color: #003764; color: #FEC24D;'>Created&lt;/th>&#xA;&lt;/tr>&lt;/thead>&lt;tbody>&#xA;&quot;&quot;&quot;;&#xA;s+= rowBuffer;&#xA;s+=&quot;&quot;&quot;&#xA;&lt;/tbody>&lt;/table>&#xA;&#xA;&lt;p>For more information on the BPM platform, &#xA;please visit &lt;a href='https://my.umassd.edu/group/myumassd/bpm'>the myUMassD Portal&lt;/a>&#xA;&lt;/p>&#xA;&quot;&quot;&quot;&#xA;&#xA;} catch(Exception ex) {&#xA;&#x9;logger.severe(ex.getMessage());&#xA;}&#xA;s+=&quot;&lt;/body>&lt;/html>&quot;&#xA;return s;" interpreter="GROOVY" type="TYPE_READ_ONLY_SCRIPT">
+            <referencedElements xmi:type="parameter:Parameter" xmi:id="_nwTw8GXoEemmMLzkWRbqXg" name="debug" typeClassname="java.lang.Boolean" description="when TRUE then the process sends email to debugEmail"/>
+            <referencedElements xmi:type="expression:Expression" xmi:id="_nwTw8WXoEemmMLzkWRbqXg" name="apiAccessor" content="apiAccessor" type="TYPE_ENGINE_CONSTANT" returnType="com.bonitasoft.engine.api.APIAccessor"/>
+            <referencedElements xmi:type="process:JavaObjectData" xmi:id="_nwTw8mXoEemmMLzkWRbqXg" name="message" dataType="_d6hdckdMEemz7LrxprMgyg" className="java.util.List"/>
+            <referencedElements xmi:type="process:JavaObjectData" xmi:id="_nwTw82XoEemmMLzkWRbqXg" name="user" dataType="_d6hdckdMEemz7LrxprMgyg" className="org.bonitasoft.engine.identity.User"/>
+          </rightOperand>
+          <operator xmi:type="expression:Operator" xmi:id="_pCNjlWB6Eeml3PH0vGU6jQ" type="ASSIGNMENT"/>
+        </operations>
+        <loopCondition xmi:type="expression:Expression" xmi:id="_pCNjlmB6Eeml3PH0vGU6jQ" name="" content="" returnType="java.lang.Boolean" returnTypeFixed="true"/>
+        <loopMaximum xmi:type="expression:Expression" xmi:id="_pCNjl2B6Eeml3PH0vGU6jQ" name="" content="" returnType="java.lang.Integer" returnTypeFixed="true"/>
+        <cardinalityExpression xmi:type="expression:Expression" xmi:id="_pCNjmGB6Eeml3PH0vGU6jQ" name="" content="" returnType="java.lang.Integer" returnTypeFixed="true"/>
+        <iteratorExpression xmi:type="expression:Expression" xmi:id="_pCNjmWB6Eeml3PH0vGU6jQ" name="message" content="message" type="MULTIINSTANCE_ITERATOR_TYPE" returnType="java.util.List" returnTypeFixed="true"/>
+        <completionCondition xmi:type="expression:Expression" xmi:id="_pCNjmmB6Eeml3PH0vGU6jQ" name="" content="" returnType="java.lang.Boolean" returnTypeFixed="true"/>
+      </elements>
+      <elements xmi:type="process:EndTerminatedEvent" xmi:id="_8oO1wGB8Eeml3PH0vGU6jQ" name="Finish" incoming="_87dTwGB8Eeml3PH0vGU6jQ">
+        <dynamicLabel xmi:type="expression:Expression" xmi:id="_8oQD4WB8Eeml3PH0vGU6jQ" name="" content="" returnTypeFixed="true"/>
+        <dynamicDescription xmi:type="expression:Expression" xmi:id="_8oQD4GB8Eeml3PH0vGU6jQ" name="" content="" returnTypeFixed="true"/>
+        <stepSummary xmi:type="expression:Expression" xmi:id="_8oQD4mB8Eeml3PH0vGU6jQ" name="" content="" returnTypeFixed="true"/>
+      </elements>
+      <data xmi:type="process:JavaObjectData" xmi:id="_EPCf0GBhEeml3PH0vGU6jQ" documentation="Get a list of type:&#xA;&lt;List&lt;List&lt;Tasks>>" name="determineUserTasks" multiple="true" dataType="_d6hdckdMEemz7LrxprMgyg" className="java.util.List">
+        <defaultValue xmi:type="expression:Expression" xmi:id="_EPCf0WBhEeml3PH0vGU6jQ" content="" interpreter="GROOVY" type="TYPE_READ_ONLY_SCRIPT" returnType="java.util.List"/>
+      </data>
+      <data xmi:type="process:JavaObjectData" xmi:id="_bAloMGBlEeml3PH0vGU6jQ" name="now" dataType="_d6hdckdMEemz7LrxprMgyg" className="java.time.LocalDateTime">
+        <defaultValue xmi:type="expression:Expression" xmi:id="_bAloMWBlEeml3PH0vGU6jQ" name="init_now()" content="import java.time.LocalDateTime&#xA;&#xA;return LocalDateTime.now();" interpreter="GROOVY" type="TYPE_READ_ONLY_SCRIPT" returnType="java.time.LocalDateTime"/>
+      </data>
+      <data xmi:type="process:JavaObjectData" xmi:id="_K6cCAGB7Eeml3PH0vGU6jQ" name="user" dataType="_d6hdckdMEemz7LrxprMgyg" className="org.bonitasoft.engine.identity.User">
+        <defaultValue xmi:type="expression:Expression" xmi:id="_K6cCAWB7Eeml3PH0vGU6jQ" content="" type="TYPE_READ_ONLY_SCRIPT" returnType="org.bonitasoft.engine.identity.User"/>
+      </data>
+      <data xmi:type="process:Data" xmi:id="_pCNjVGB6Eeml3PH0vGU6jQ" documentation="Generate string of tasks to be completed" name="htmlTasks" dataType="_d6hdcUdMEemz7LrxprMgyg">
+        <defaultValue xmi:type="expression:Expression" xmi:id="_pCNjVWB6Eeml3PH0vGU6jQ" content=""/>
+      </data>
+      <data xmi:type="process:BusinessObjectData" xmi:id="_r1at8GB-Eeml3PH0vGU6jQ" name="notificationList" multiple="true" dataType="_d6hddEdMEemz7LrxprMgyg" className="edu.umassd.model.UMDPendingNotification">
+        <defaultValue xmi:type="expression:Expression" xmi:id="_r1at8WB-Eeml3PH0vGU6jQ" name="" content="" interpreter="GROOVY" type="TYPE_READ_ONLY_SCRIPT" returnType="java.lang.Object"/>
+      </data>
+      <formMapping xmi:type="process:FormMapping" xmi:id="_tghggGBgEeml3PH0vGU6jQ">
+        <targetForm xmi:type="expression:Expression" xmi:id="_Isx60GB_Eeml3PH0vGU6jQ" name="genericStartForm" content="c1783752-ca10-417e-ae54-afdb27b32221" type="FORM_REFERENCE_TYPE" returnTypeFixed="true"/>
+      </formMapping>
+      <overviewFormMapping xmi:type="process:FormMapping" xmi:id="_tghggmBgEeml3PH0vGU6jQ" type="NONE">
+        <targetForm xmi:type="expression:Expression" xmi:id="_tghgg2BgEeml3PH0vGU6jQ" name="" content="" type="FORM_REFERENCE_TYPE" returnTypeFixed="true"/>
+      </overviewFormMapping>
+      <connections xmi:type="process:SequenceFlow" xmi:id="_3szuUGBgEeml3PH0vGU6jQ" target="_3Sz58GBgEeml3PH0vGU6jQ" source="_wqErYGBgEeml3PH0vGU6jQ">
+        <decisionTable xmi:type="decision:DecisionTable" xmi:id="_3s0VYGBgEeml3PH0vGU6jQ"/>
+        <condition xmi:type="expression:Expression" xmi:id="_3s0VYWBgEeml3PH0vGU6jQ" name="" content="" type="TYPE_CONDITION" returnType="java.lang.Boolean" returnTypeFixed="true"/>
+      </connections>
+      <connections xmi:type="process:SequenceFlow" xmi:id="_p2T5wGB6Eeml3PH0vGU6jQ" target="_pCNjUGB6Eeml3PH0vGU6jQ" source="_3Sz58GBgEeml3PH0vGU6jQ">
+        <decisionTable xmi:type="decision:DecisionTable" xmi:id="_p2T5wWB6Eeml3PH0vGU6jQ"/>
+        <condition xmi:type="expression:Expression" xmi:id="_p2Ug0GB6Eeml3PH0vGU6jQ" name="" type="TYPE_CONDITION" returnType="java.lang.Boolean" returnTypeFixed="true"/>
+      </connections>
+      <connections xmi:type="process:SequenceFlow" xmi:id="_87dTwGB8Eeml3PH0vGU6jQ" target="_8oO1wGB8Eeml3PH0vGU6jQ" source="_pCNjUGB6Eeml3PH0vGU6jQ">
+        <decisionTable xmi:type="decision:DecisionTable" xmi:id="_87dTwWB8Eeml3PH0vGU6jQ"/>
+        <condition xmi:type="expression:Expression" xmi:id="_87dTwmB8Eeml3PH0vGU6jQ" name="" type="TYPE_CONDITION" returnType="java.lang.Boolean" returnTypeFixed="true"/>
+      </connections>
+      <connections xmi:type="process:SequenceFlow" xmi:id="_IDVJoGCJEeml3PH0vGU6jQ" target="_3Sz58GBgEeml3PH0vGU6jQ" source="_xltNMGBgEeml3PH0vGU6jQ">
+        <decisionTable xmi:type="decision:DecisionTable" xmi:id="_IDW-0GCJEeml3PH0vGU6jQ"/>
+        <condition xmi:type="expression:Expression" xmi:id="_IDW-0WCJEeml3PH0vGU6jQ" name="" content="" type="TYPE_CONDITION" returnType="java.lang.Boolean" returnTypeFixed="true"/>
+      </connections>
+      <actors xmi:type="process:Actor" xmi:id="_I6aJIGBpEeml3PH0vGU6jQ" name="Actor1" initiator="true"/>
+      <parameters xmi:type="parameter:Parameter" xmi:id="_fGHTIGBlEeml3PH0vGU6jQ" name="numDaysReminder" typeClassname="java.lang.Integer"/>
+      <parameters xmi:type="parameter:Parameter" xmi:id="_qZuBcGB9Eeml3PH0vGU6jQ" name="mailHost" typeClassname="java.lang.String"/>
+      <parameters xmi:type="parameter:Parameter" xmi:id="_rGg2AGB9Eeml3PH0vGU6jQ" name="mailUser" typeClassname="java.lang.String"/>
+      <parameters xmi:type="parameter:Parameter" xmi:id="_r0lc8GB9Eeml3PH0vGU6jQ" name="mailPassword" typeClassname="java.lang.String"/>
+      <parameters xmi:type="parameter:Parameter" xmi:id="_s95OYGB9Eeml3PH0vGU6jQ" name="mailPort" typeClassname="java.lang.Integer"/>
+      <parameters xmi:type="parameter:Parameter" xmi:id="_Slqg8GB-Eeml3PH0vGU6jQ" name="debug" typeClassname="java.lang.Boolean" description="when TRUE then the process sends email to debugEmail"/>
+      <parameters xmi:type="parameter:Parameter" xmi:id="_Uhf7gGB-Eeml3PH0vGU6jQ" name="debugEmail" typeClassname="java.lang.String" description="recipient of email when in debug mode"/>
+      <parameters xmi:type="parameter:Parameter" xmi:id="_GICXEGCIEeml3PH0vGU6jQ" name="maxPossibleUsers" typeClassname="java.lang.Integer" description="maximum number of users to fetch in possibleuser calculation — set to a low number for performance reasons (pref. under 50)"/>
+      <parameters xmi:type="parameter:Parameter" xmi:id="_ywzMcGESEeml3PH0vGU6jQ" name="defaultDomain" typeClassname="java.lang.String"/>
+      <parameters xmi:type="parameter:Parameter" xmi:id="_Gz3e4GEjEeml3PH0vGU6jQ" name="processParameterToSkip" typeClassname="java.lang.String" description="Determine if a process should be skipped if it has a parameter with the defined name that is set to “true” (can be a boolean, string, or integer representation of true/false) "/>
+      <contract xmi:type="process:Contract" xmi:id="_tghghGBgEeml3PH0vGU6jQ"/>
+      <searchIndexes xmi:type="process:SearchIndex" xmi:id="_tgg5cGBgEeml3PH0vGU6jQ">
+        <name xmi:type="expression:Expression" xmi:id="_tgg5cWBgEeml3PH0vGU6jQ" content="" returnTypeFixed="true"/>
+        <value xmi:type="expression:Expression" xmi:id="_tgg5cmBgEeml3PH0vGU6jQ" content="" returnTypeFixed="true"/>
+      </searchIndexes>
+      <searchIndexes xmi:type="process:SearchIndex" xmi:id="_tgg5c2BgEeml3PH0vGU6jQ">
+        <name xmi:type="expression:Expression" xmi:id="_tgg5dGBgEeml3PH0vGU6jQ" content="" returnTypeFixed="true"/>
+        <value xmi:type="expression:Expression" xmi:id="_tgg5dWBgEeml3PH0vGU6jQ" content="" returnTypeFixed="true"/>
+      </searchIndexes>
+      <searchIndexes xmi:type="process:SearchIndex" xmi:id="_tgg5dmBgEeml3PH0vGU6jQ">
+        <name xmi:type="expression:Expression" xmi:id="_tgg5d2BgEeml3PH0vGU6jQ" content="" returnTypeFixed="true"/>
+        <value xmi:type="expression:Expression" xmi:id="_tgg5eGBgEeml3PH0vGU6jQ" content="" returnTypeFixed="true"/>
+      </searchIndexes>
+      <searchIndexes xmi:type="process:SearchIndex" xmi:id="_tgg5eWBgEeml3PH0vGU6jQ">
+        <name xmi:type="expression:Expression" xmi:id="_tgg5emBgEeml3PH0vGU6jQ" content="" returnTypeFixed="true"/>
+        <value xmi:type="expression:Expression" xmi:id="_tgg5e2BgEeml3PH0vGU6jQ" content="" returnTypeFixed="true"/>
+      </searchIndexes>
+      <searchIndexes xmi:type="process:SearchIndex" xmi:id="_tgg5fGBgEeml3PH0vGU6jQ">
+        <name xmi:type="expression:Expression" xmi:id="_tgg5fWBgEeml3PH0vGU6jQ" content="" returnTypeFixed="true"/>
+        <value xmi:type="expression:Expression" xmi:id="_tgg5fmBgEeml3PH0vGU6jQ" content="" returnTypeFixed="true"/>
+      </searchIndexes>
+    </elements>
+    <datatypes xmi:type="process:BooleanType" xmi:id="_d6hdbEdMEemz7LrxprMgyg" name="Boolean"/>
+    <datatypes xmi:type="process:DateType" xmi:id="_d6hdbUdMEemz7LrxprMgyg" name="Date"/>
+    <datatypes xmi:type="process:IntegerType" xmi:id="_d6hdbkdMEemz7LrxprMgyg" name="Integer"/>
+    <datatypes xmi:type="process:LongType" xmi:id="_d6hdb0dMEemz7LrxprMgyg" name="Long"/>
+    <datatypes xmi:type="process:DoubleType" xmi:id="_d6hdcEdMEemz7LrxprMgyg" name="Double"/>
+    <datatypes xmi:type="process:StringType" xmi:id="_d6hdcUdMEemz7LrxprMgyg" name="Text"/>
+    <datatypes xmi:type="process:JavaType" xmi:id="_d6hdckdMEemz7LrxprMgyg" name="Java_object"/>
+    <datatypes xmi:type="process:XMLType" xmi:id="_d6hdc0dMEemz7LrxprMgyg" name="XML"/>
+    <datatypes xmi:type="process:BusinessObjectType" xmi:id="_d6hddEdMEemz7LrxprMgyg" name="Business_Object"/>
+  </process:MainProcess>
+  <notation:Diagram xmi:id="_d6hddUdMEemz7LrxprMgyg" type="Process" element="_d6hdQEdMEemz7LrxprMgyg" name="MyDiagram1" measurementUnit="Pixel">
+    <children xmi:type="notation:Node" xmi:id="_thJLkGBgEeml3PH0vGU6jQ" type="2007" element="_tdfaoGBgEeml3PH0vGU6jQ">
+      <children xmi:type="notation:DecorationNode" xmi:id="_thJyoGBgEeml3PH0vGU6jQ" type="5008"/>
+      <children xmi:type="notation:DecorationNode" xmi:id="_thKZsGBgEeml3PH0vGU6jQ" type="7001">
+        <children xmi:type="notation:Shape" xmi:id="_wqJj4GBgEeml3PH0vGU6jQ" type="3002" element="_wqErYGBgEeml3PH0vGU6jQ" fontName=".AppleSystemUIFont">
+          <children xmi:type="notation:DecorationNode" xmi:id="_wqKK8GBgEeml3PH0vGU6jQ" type="5024">
+            <layoutConstraint xmi:type="notation:Location" xmi:id="_wqKK8WBgEeml3PH0vGU6jQ" y="5"/>
+          </children>
+          <layoutConstraint xmi:type="notation:Bounds" xmi:id="_wqJj4WBgEeml3PH0vGU6jQ" x="70" y="50"/>
+        </children>
+        <children xmi:type="notation:Shape" xmi:id="_xlvCYGBgEeml3PH0vGU6jQ" type="3016" element="_xltNMGBgEeml3PH0vGU6jQ" fontName=".AppleSystemUIFont">
+          <children xmi:type="notation:DecorationNode" xmi:id="_xlvCYmBgEeml3PH0vGU6jQ" type="5031">
+            <layoutConstraint xmi:type="notation:Location" xmi:id="_xlvCY2BgEeml3PH0vGU6jQ" y="5"/>
+          </children>
+          <layoutConstraint xmi:type="notation:Bounds" xmi:id="_xlvCYWBgEeml3PH0vGU6jQ" x="55" y="148"/>
+        </children>
+        <children xmi:type="notation:Shape" xmi:id="_3S1vIGBgEeml3PH0vGU6jQ" type="3027" element="_3Sz58GBgEeml3PH0vGU6jQ" fontName=".AppleSystemUIFont" fillColor="14334392" lineColor="10710316">
+          <children xmi:type="notation:DecorationNode" xmi:id="_3S1vImBgEeml3PH0vGU6jQ" type="5017"/>
+          <layoutConstraint xmi:type="notation:Bounds" xmi:id="_3S1vIWBgEeml3PH0vGU6jQ" x="202" y="92" width="120" height="60"/>
+        </children>
+        <children xmi:type="notation:Shape" xmi:id="_pCOxcGB6Eeml3PH0vGU6jQ" type="3027" element="_pCNjUGB6Eeml3PH0vGU6jQ" fontName=".AppleSystemUIFont" fillColor="14334392" lineColor="10710316">
+          <children xmi:type="notation:DecorationNode" xmi:id="_pCOxcWB6Eeml3PH0vGU6jQ" type="5017" element="_pCNjUGB6Eeml3PH0vGU6jQ"/>
+          <layoutConstraint xmi:type="notation:Bounds" xmi:id="_pCOxcmB6Eeml3PH0vGU6jQ" x="404" y="97"/>
+        </children>
+        <children xmi:type="notation:Shape" xmi:id="_8oRSAGB8Eeml3PH0vGU6jQ" type="3062" element="_8oO1wGB8Eeml3PH0vGU6jQ" fontName=".AppleSystemUIFont">
+          <children xmi:type="notation:DecorationNode" xmi:id="_8oRSAmB8Eeml3PH0vGU6jQ" type="5090">
+            <layoutConstraint xmi:type="notation:Location" xmi:id="_8oRSA2B8Eeml3PH0vGU6jQ" y="5"/>
+          </children>
+          <layoutConstraint xmi:type="notation:Bounds" xmi:id="_8oRSAWB8Eeml3PH0vGU6jQ" x="659" y="105"/>
+        </children>
+      </children>
+      <styles xmi:type="notation:DescriptionStyle" xmi:id="_thJLkWBgEeml3PH0vGU6jQ"/>
+      <styles xmi:type="notation:FontStyle" xmi:id="_thJLkmBgEeml3PH0vGU6jQ" fontName=".AppleSystemUIFont"/>
+      <styles xmi:type="notation:LineStyle" xmi:id="_thJLk2BgEeml3PH0vGU6jQ"/>
+      <styles xmi:type="notation:FillStyle" xmi:id="_thKZsWBgEeml3PH0vGU6jQ"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_thJLlGBgEeml3PH0vGU6jQ" width="1320" height="281"/>
+    </children>
+    <styles xmi:type="notation:DiagramStyle" xmi:id="_d6hdjUdMEemz7LrxprMgyg"/>
+    <edges xmi:type="notation:Connector" xmi:id="_3s2KkGBgEeml3PH0vGU6jQ" type="4001" element="_3szuUGBgEeml3PH0vGU6jQ" source="_wqJj4GBgEeml3PH0vGU6jQ" target="_3S1vIGBgEeml3PH0vGU6jQ" roundedBendpointsRadius="10" routing="Rectilinear">
+      <children xmi:type="notation:DecorationNode" xmi:id="_3s2xoGBgEeml3PH0vGU6jQ" type="6001">
+        <layoutConstraint xmi:type="notation:Location" xmi:id="_3s2xoWBgEeml3PH0vGU6jQ" y="-10"/>
+      </children>
+      <styles xmi:type="notation:FontStyle" xmi:id="_3s2KkWBgEeml3PH0vGU6jQ" fontName=".AppleSystemUIFont"/>
+      <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_3s2KkmBgEeml3PH0vGU6jQ" points="[-7, -3, -159, -41]$[102, 39, -50, 1]"/>
+      <sourceAnchor xmi:type="notation:IdentityAnchor" xmi:id="_3s508GBgEeml3PH0vGU6jQ" id="(1.0,0.9666666666666667)"/>
+    </edges>
+    <edges xmi:type="notation:Connector" xmi:id="_p2Ug0WB6Eeml3PH0vGU6jQ" type="4001" element="_p2T5wGB6Eeml3PH0vGU6jQ" source="_3S1vIGBgEeml3PH0vGU6jQ" target="_pCOxcGB6Eeml3PH0vGU6jQ" roundedBendpointsRadius="10" routing="Rectilinear">
+      <children xmi:type="notation:DecorationNode" xmi:id="_p2VH4GB6Eeml3PH0vGU6jQ" type="6001">
+        <layoutConstraint xmi:type="notation:Location" xmi:id="_p2VH4WB6Eeml3PH0vGU6jQ" y="-10"/>
+      </children>
+      <styles xmi:type="notation:FontStyle" xmi:id="_p2Ug0mB6Eeml3PH0vGU6jQ" fontName=".AppleSystemUIFont"/>
+      <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_p2Ug02B6Eeml3PH0vGU6jQ" points="[0, -6, -90, 0]$[82, -7, -8, -1]"/>
+      <sourceAnchor xmi:type="notation:IdentityAnchor" xmi:id="_p2XkIGB6Eeml3PH0vGU6jQ" id="(1.0,0.5666666666666667)"/>
+      <targetAnchor xmi:type="notation:IdentityAnchor" xmi:id="_p2XkIWB6Eeml3PH0vGU6jQ" id="(0.08,0.46)"/>
+    </edges>
+    <edges xmi:type="notation:Connector" xmi:id="_87d60GB8Eeml3PH0vGU6jQ" type="4001" element="_87dTwGB8Eeml3PH0vGU6jQ" source="_pCOxcGB6Eeml3PH0vGU6jQ" target="_8oRSAGB8Eeml3PH0vGU6jQ" roundedBendpointsRadius="10" routing="Rectilinear">
+      <children xmi:type="notation:DecorationNode" xmi:id="_87d602B8Eeml3PH0vGU6jQ" type="6001">
+        <layoutConstraint xmi:type="notation:Location" xmi:id="_87d61GB8Eeml3PH0vGU6jQ" y="-10"/>
+      </children>
+      <styles xmi:type="notation:FontStyle" xmi:id="_87d60WB8Eeml3PH0vGU6jQ" fontName=".AppleSystemUIFont"/>
+      <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_87d60mB8Eeml3PH0vGU6jQ" points="[0, -3, -170, 3]$[167, 8, -3, 14]"/>
+      <sourceAnchor xmi:type="notation:IdentityAnchor" xmi:id="_87fI8GB8Eeml3PH0vGU6jQ" id="(1.0,0.58)"/>
+    </edges>
+    <edges xmi:type="notation:Connector" xmi:id="_IDYM8GCJEeml3PH0vGU6jQ" type="4001" element="_IDVJoGCJEeml3PH0vGU6jQ" source="_xlvCYGBgEeml3PH0vGU6jQ" target="_3S1vIGBgEeml3PH0vGU6jQ" roundedBendpointsRadius="10" routing="Rectilinear">
+      <children xmi:type="notation:DecorationNode" xmi:id="_IDZbEGCJEeml3PH0vGU6jQ" type="6001">
+        <layoutConstraint xmi:type="notation:Location" xmi:id="_IDZbEWCJEeml3PH0vGU6jQ" y="-10"/>
+      </children>
+      <styles xmi:type="notation:FontStyle" xmi:id="_IDYM8WCJEeml3PH0vGU6jQ" fontName=".AppleSystemUIFont"/>
+      <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_IDYM8mCJEeml3PH0vGU6jQ" points="[-1, -19, -129, 36]$[117, -55, -11, 0]"/>
+      <sourceAnchor xmi:type="notation:IdentityAnchor" xmi:id="_IDapMGCJEeml3PH0vGU6jQ" id="(1.0,0.9666666666666667)"/>
+      <targetAnchor xmi:type="notation:IdentityAnchor" xmi:id="_IDapMWCJEeml3PH0vGU6jQ" id="(0.09166666666666666,0.5)"/>
+    </edges>
+  </notation:Diagram>
+</xmi:XMI>
